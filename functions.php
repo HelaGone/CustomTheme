@@ -162,5 +162,45 @@
 	}
 	add_action('pre_get_posts', 'ct_pre_get_posts');
 
+	// THE EXECRPT FORMAT AND LENGTH /////////////////////////////////////////////////////
+	/*LIMIT FOR EXCERPT 18 WORDS*/
+	function custom_excerpt_length( $length ) {
+		return 18;
+	}
+	add_filter( 'excerpt_length', 'custom_excerpt_length', '999' );
+
+	function isa_cpt_excerpt_more( $more ) {
+    	global $post;
+    	$anchor_text = 'Read more';
+    	$more = ' &hellip; <a href="'. esc_url( get_permalink() ) . '">' . $anchor_text . '</a>';
+    	return $more;
+	}
+	add_filter('excerpt_more', 'isa_cpt_excerpt_more');
+
+	// REMOVE ACCENTS AND THE LETTER Ñ FROM FILE NAMES ///////////////////////////////////
+	add_filter( 'sanitize_file_name', function ($filename) {
+		$filename = str_replace('ñ', 'n', $filename);
+		return remove_accents($filename);
+	});
+
+	/**
+	 * Produces cleaner filenames for uploads
+	 *
+	 * @param  string $filename
+	 * @return string
+	 */
+	function wpartisan_sanitize_file_name( $filename ) {
+		$sanitized_filename = remove_accents( $filename ); // Convert to ASCII
+		// Standard replacements
+		$invalid = array(' '=>'-','%20'=>'-','_'=>'-',);
+		$sanitized_filename = str_replace( array_keys( $invalid ), array_values( $invalid ), $sanitized_filename );
+		$sanitized_filename = preg_replace('/[^A-Za-z0-9-\. ]/', '', $sanitized_filename); // Remove all non-alphanumeric except .
+		$sanitized_filename = preg_replace('/\.(?=.*\.)/', '', $sanitized_filename); // Remove all but last .
+		$sanitized_filename = preg_replace('/-+/', '-', $sanitized_filename); // Replace any more than one - in a row
+		$sanitized_filename = str_replace('-.', '.', $sanitized_filename); // Remove last - if at the end
+		$sanitized_filename = strtolower( $sanitized_filename ); // Lowercase
+		return $sanitized_filename;
+	}
+	add_filter( 'sanitize_file_name', 'wpartisan_sanitize_file_name', 10, 1 );
 
 
